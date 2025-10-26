@@ -19,9 +19,34 @@ local function FVector_(x, y, z)
             return nil
         end
     end
-    local vec = {x = x or 0, y = y or 0, z = z or 0}
+    local vec = {[1] = x or 0, [2] = y or 0, [3] = z or 0}
     setmetatable(vec, FVECTOR_MT)
     return vec
+end
+
+function FVECTOR_MT:__index(key)
+    local method = FVECTOR_MT[key]
+    if method then
+        return method
+    end
+
+    if key == 1 or key == "x" or key == "X" or key == "r" then
+        return self[1]
+    elseif key == 2 or key == "y" or key == "Y" or key == "g" then
+        return self[2]
+    elseif key == 3 or key == "z" or key == "Z" or key == "b" then
+        return self[3]
+    end
+end
+
+function FVECTOR_MT:__newindex(key, value)
+    if key == 1 or key == "x" or key == "X" or key == "r" then
+        rawset(self, 1, value)
+    elseif key == 2 or key == "y" or key == "Y" or key == "g" then
+        rawset(self, 2, value)
+    elseif key == 3 or key == "z" or key == "Z" or key == "b" then
+        rawset(self, 3, value)
+    end
 end
 
 function FVECTOR_MT:__tostring()
@@ -38,17 +63,33 @@ end
 
 function FVECTOR_MT:__mul(other)
     local v = IsNumber(other)
+    if v == nil then
+        v = IsNumber(self) -- Arguments self & other can flip, example: 2 * FVector(1, 2, 3)
+        if v ~= nil then
+            self = other
+        end
+    end
+
     if v ~= nil then
         return FVector_(self.x * v, self.y * v, self.z * v)
     end
+
     return FVector_(self.x * other.x, self.y * other.y, self.z * other.z)
 end
 
 function FVECTOR_MT:__div(other)
     local v = IsNumber(other)
+    if v == nil then
+        v = IsNumber(self) -- Arguments self & other can flip, example: 2 * FVector(1, 2, 3)
+        if v ~= nil then
+            self = other
+        end
+    end
+
     if v ~= nil then
         return FVector_(self.x / v, self.y / v, self.z / v)
     end
+
     return FVector_(self.x / other.x, self.y / other.y, self.z / other.z)
 end
 
@@ -73,15 +114,33 @@ function FVECTOR_MT:Cross(other)
 end
 
 function FVECTOR_MT:Mul(other)
-    self.x = self.x * other
-    self.y = self.y * other
-    self.z = self.z * other
+    local x, y, z
+    if IsNumber(other) then
+        x, y, z = other
+    else
+        x = other[1]
+        y = other[2]
+        z = other[3]
+    end
+
+    self.x = self.x * x
+    self.y = self.y * y
+    self.z = self.z * z
 end
 
 function FVECTOR_MT:Div(other)
-    self.x = self.x / other
-    self.y = self.y / other
-    self.z = self.z / other
+    local x, y, z
+    if IsNumber(other) then
+        x, y, z = other
+    else
+        x = other[1]
+        y = other[2]
+        z = other[3]
+    end
+
+    self.x = self.x / x
+    self.y = self.y / y
+    self.z = self.z / z
 end
 
 function FVECTOR_MT:Add(other)
